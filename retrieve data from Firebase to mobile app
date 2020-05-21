@@ -1,0 +1,289 @@
+# Food-distribution-framework-project
+private DatabaseReference mDatabase;
+
+// ...
+mDatabase = FirebaseDatabase.getInstance().getReference();
+
+
+
+@IgnoreExtraProperties
+public class User {
+
+    public String Humidity;
+
+    public String Temperature;
+
+
+    public User() {
+ 
+       // Default constructor required for calls to DataSnapshot.getValue(User.class)
+
+    }
+
+
+    public User(String Humidity, String Temperature) 
+{
+
+        this.Humidity = Humidity;
+
+        this.Temperature = Temperature;
+ 
+   }
+
+
+}
+
+
+
+
+private void writeNewUser(String sensor_data, String Humidity, String Temperature)
+ {
+
+    User user = new User(Humidity, Temperature);
+
+
+    mDatabase.child("users").child(sensor_data).setValue(user);
+
+}
+
+
+
+
+
+
+
+mDatabase.child("users").child(sensor_data).child("Humidity").setValue(Temperature);
+
+
+
+
+ValueEventListener postListener = new ValueEventListener() 
+{
+ 
+   @Override
+ 
+   public void onDataChange(DataSnapshot dataSnapshot) {
+
+        // Get Post object and use the values to update the UI
+     
+   Post post = dataSnapshot.getValue(Post.class);
+   
+     // ...
+
+    }
+
+
+    @Override
+ 
+   public void onCancelled(DatabaseError databaseError)
+ {
+
+        // Getting Post failed, log a message
+ 
+       Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+ 
+       // ...
+ 
+   }
+
+};
+
+mPostReference.addValueEventListener(postListener);
+
+
+
+
+
+
+
+
+
+@IgnoreExtraProperties
+
+public class Post {
+ 
+   public String sensor_data;
+  
+  public String title;
+ 
+   public String body;
+
+    public int starCount = 0;
+
+    public Map<String, Boolean> stars = new HashMap<>();
+
+ 
+   public Post() {
+
+        // Default constructor required for calls to DataSnapshot.getValue(Post.class)
+
+    }
+
+
+    public Post(String sensor_data, String title, String body)
+ {
+       
+ this.uid = sensor_data;
+ 
+       this.title = title;
+
+        this.body = body;
+ 
+   }
+
+    @Exclude
+
+    public Map<String, Object> toMap() 
+{
+   
+     HashMap<String, Object> result = new HashMap<>();
+
+        result.put("sensor_data", sensor_data);
+
+        result.put("title", title);
+
+        result.put("body", body);
+     
+   result.put("starCount", starCount);
+
+        result.put("stars", stars);
+
+        return result;
+
+    }
+
+}
+
+
+
+
+
+
+
+private void writeNewPost(String Temperature, String Humidity, String title, String body) 
+{
+
+    // Create new post at /user-posts/$userid/$postid and at
+   
+ // /posts/$postid simultaneously
+
+    String key = mDatabase.child("posts").push().getKey();
+
+    Post post = new Post(Temperature, Humidity, title, body);
+  
+  Map<String, Object> postValues = post.toMap();
+
+ 
+   Map<String, Object> childUpdates = new HashMap<>();
+ 
+   childUpdates.put("/posts/" + key, postValues);
+
+    childUpdates.put("/user-posts/" + userId + "/" + key, postValues);
+
+  
+  mDatabase.updateChildren(childUpdates);
+
+}
+
+
+
+
+mDatabase.child("users").child(Humidity).setValue(Temperature)
+        .addOnSuccessListener(new OnSuccessListener<Void>() 
+{
+
+            @Override
+     
+       public void onSuccess(Void aVoid) 
+{
+ 
+               // Write was successful!
+     
+           // ...
+    
+        }
+ 
+       }).addOnFailureListener(new OnFailureListener() {
+
+            @Override
+    
+        public void onFailure(@NonNull Exception e)
+ {
+    
+            // Write failed
+ 
+               // ...
+  
+          }
+
+        });
+
+
+
+
+
+private void onStarClicked(DatabaseReference postRef)
+ {
+ 
+   postRef.runTransaction(new Transaction.Handler() {
+
+        @Override
+      
+  public Transaction.Result doTransaction(MutableData mutableData) 
+{
+       
+     Post p = mutableData.getValue(Post.class);
+  
+          if (p == null) {
+       
+         return Transaction.success(mutableData);
+   
+         }
+
+
+            if (p.stars.containsKey(getUid()))
+ {
+ 
+               // Unstar the post and remove self from stars
+     
+           p.starCount = p.starCount - 1;
+
+                p.stars.remove(getUid());
+  
+          }
+ else
+ {
+ 
+               // Star the post and add self to stars
+     
+           p.starCount = p.starCount + 1;
+   
+             p.stars.put(getUid(), true);
+  
+          }
+
+     
+       // Set value and report transaction success
+
+            mutableData.setValue(p);
+   
+         return Transaction.success(mutableData);
+   
+     }
+
+  
+      @Override
+  
+      public void onComplete(DatabaseError databaseError, boolean committed,
+DataSnapshot currentData) {
+ 
+           // Transaction completed
+      
+      Log.d(TAG, "postTransaction:onComplete:" + databaseError);
+  
+      }
+
+    }
+);
+
+}
