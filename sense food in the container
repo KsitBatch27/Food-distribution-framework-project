@@ -1,0 +1,26 @@
+# Food-distribution-framework-project
+#include<dht.h>
+int IR=7;
+void HUMIDITY_MEASUREMENT(void);
+void IR_MONITOR(void);
+void setup()
+{
+Serial.begin(115200);
+pinMode(IR,INPUT);
+pinMode(dht_dpin,INPUT);
+Serial.println("SMART FOOD CONTAINER");
+delay(1000);
+}
+void loop()
+{
+IR_MONITOR();
+delay(1000);
+}
+void IR_MONITOR()
+{
+if((digitalRead(IR)==LOW))
+{
+Serial.println("CONTAINER RECIEVED FOOD");
+delay(1000);
+}
+}
