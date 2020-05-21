@@ -1,0 +1,30 @@
+#include<dht.h>
+dht DHT;
+#define dht_dpin A0
+void TEMP_MEASUREMENT(void);
+void setup()
+{
+Serial.begin(115200);
+pinMode(IR,INPUT);
+pinMode(dht_dpin,INPUT);
+Serial.println("SMART FOOD CONTAINER");
+delay(1000);
+}
+void loop()
+{
+delay(1000);
+TEMP_MEASUREMENT();
+delay(1000);
+}
+void TEMP_MEASUREMENT(void)
+{
+DHT.read11(dht_dpin);
+delay(500);
+Serial.print("TEMP:");
+Serial.println(DHT.temperature);
+delay(500);
+if((DHT.temperature>31))
+{
+Serial.println("MORE TEMPERATURE");
+delay(1000);
+}}
